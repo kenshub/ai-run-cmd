@@ -1,7 +1,7 @@
 # 🎤 AI RUN CMD
 
 
-![AI-Run-DMC Logo](img/logos/ai_run_cmd_256x256.png)
+![AI-Run-CMD Logo](img/logos/ai_run_cmd_256x256.png)
 
 A fun and functional terminal AI assistant using ChatGPT or local models via Ollama.
 Just type `ai do something` or `ail do it offline` and let DMC help you drop command-line hits.
@@ -23,7 +23,7 @@ Just type `ai do something` or `ail do it offline` and let DMC help you drop com
 ### ✅ Quick One-Liner
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/YOURUSERNAME/ai-run-dmc/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/YOURUSERNAME/ai-run-cmd/main/install.sh)
 ```
 
 > This clones the repo, sets up `.env`, and updates your `.bashrc` or `.zshrc`.
@@ -36,20 +36,20 @@ If you prefer control.
 1. Clone the repo:
 
 ```bash
-git clone https://github.com/YOURUSERNAME/ai-run-dmc.git ~/ai-run-dmc
+git clone https://github.com/YOURUSERNAME/ai-run-cmd.git ~/ai-run-cmd
 ```
 
 2. Create and configure your `.env`:
 
 ```bash
-cp ~/ai-run-dmc/.env.example ~/ai-run-dmc/.env
-nano ~/ai-run-dmc/.env
+cp ~/ai-run-cmd/.env.example ~/ai-run-cmd/.env
+nano ~/ai-run-cmd/.env
 ```
 
 3. Safely source the script in your shell config:
 
 ```bash
-[ -f ~/ai-run-dmc/ai.sh ] && source ~/ai-run-dmc/ai.sh
+[ -f ~/ai-run-cmd/ai.sh ] && source ~/ai-run-cmd/ai.sh
 ```
 
 4. Reload your shell:

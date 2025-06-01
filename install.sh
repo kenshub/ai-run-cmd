@@ -3,9 +3,9 @@ set -e
 
 echo "📦 Installing AI RUN CMD..."
 
-git clone https://github.com/YOURUSERNAME/ai-run-dmc.git ~/ai-run-dmc
+git clone https://github.com/kenshub/ai-run-cmd.git ~/ai-run-cmd
 
-cp ~/ai-run-dmc/.env.example ~/ai-run-dmc/.env
+cp ~/ai-run-cmd/.env.example ~/ai-run-cmd/.env
 
 # Detect shell rc
 if [ -n "$ZSH_VERSION" ]; then
@@ -14,7 +14,7 @@ else
   SHELL_RC="$HOME/.bashrc"
 fi
 
-SOURCE_LINE='[ -f ~/ai-run-dmc/ai.sh ] && source ~/ai-run-dmc/ai.sh'
+SOURCE_LINE='[ -f ~/ai-run-cmd/ai.sh ] && source ~/ai-run-cmd/ai.sh'
 
 if ! grep -Fxq "$SOURCE_LINE" "$SHELL_RC"; then
   echo "$SOURCE_LINE" >> "$SHELL_RC"

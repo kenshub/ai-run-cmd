@@ -1,0 +1,12 @@
+# Temporary files
+*.tmp
+
+# Editor backups
+*~
+.*.swp
+
+# OS-specific files
+.DS_Store
+
+# Sensitive environment files
+.env

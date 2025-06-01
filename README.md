@@ -23,7 +23,7 @@ Just type `ai do something` or `ail do it offline` and let DMC help you drop com
 ### ✅ Quick One-Liner
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/YOURUSERNAME/ai-run-cmd/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/kenshub/ai-run-cmd/main/install.sh)
 ```
 
 > This clones the repo, sets up `.env`, and updates your `.bashrc` or `.zshrc`.
@@ -36,7 +36,7 @@ If you prefer control.
 1. Clone the repo:
 
 ```bash
-git clone https://github.com/YOURUSERNAME/ai-run-cmd.git ~/ai-run-cmd
+git clone https://github.com/kenshub/ai-run-cmd.git ~/ai-run-cmd
 ```
 
 2. Create and configure your `.env`:
@@ -78,6 +78,6 @@ ai list containers
 
 If this helped you out:
 
-[Buy me a coffee](https://buymeacoffee.com/YOURUSERNAME)
+[Buy me a coffee](https://buymeacoffee.com/uken)
 
 Or just ⭐ the repo and tell a friend.

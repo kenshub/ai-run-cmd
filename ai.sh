@@ -20,6 +20,8 @@ DEBUG_AI=${DEBUG_AI:-0}
 
 
 function ai() {
+  local model="${1:-gpt-3.5-turbo}"
+  shift
   local prompt="$*"
   local api_key="${OPENAI_API_KEY:-YOUR_API_KEY_HERE}"
   local temp_full="/tmp/ai_full.json"
@@ -35,7 +37,7 @@ function ai() {
     -H "Authorization: Bearer $api_key" \
     -H "Content-Type: application/json" \
     -d '{
-      "model": "gpt-3.5-turbo",
+      "model": "$model",
       "messages": [{"role": "user", "content": "'"$prompt"'"}],
       "max_tokens": 300
     }')
@@ -78,8 +80,9 @@ function ai() {
 
 # Local AI via Ollama
 function ail() {
+  local model="${1:-mistral}"
+  shift
   local prompt="$*"
-  local model="${OLLAMA_MODEL:-mistral}"
   local temp_response="/tmp/ail_response.txt"
   local temp_commands="/tmp/ail_commands.txt"
 

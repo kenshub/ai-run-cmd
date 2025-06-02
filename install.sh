@@ -18,7 +18,15 @@ else
   git clone https://github.com/kenshub/ai-run-cmd.git ~/ai-run-cmd
 fi
 
-cp ~/ai-run-cmd/.env.example ~/ai-run-cmd/.env
+# Check if .env file already exists
+ENV_EXISTS=0
+if [ -f ~/ai-run-cmd/.env ]; then
+  echo "📄 .env file already exists, keeping your existing configuration."
+  ENV_EXISTS=1
+else
+  echo "📄 Creating new .env file from example..."
+  cp ~/ai-run-cmd/.env.example ~/ai-run-cmd/.env
+fi
 
 # Detect shell rc
 if [ -n "$ZSH_VERSION" ]; then
@@ -56,12 +64,15 @@ else
   echo "✅ All dependencies found."
 fi
 
-# Ask the user for their preferred model
-read -r -p "Please enter your preferred OpenAI model (default: gpt-3.5-turbo): " preferred_model
-preferred_model="${preferred_model:-gpt-3.5-turbo}"
+# Only ask for model preference if we created a new .env file
+if [ $ENV_EXISTS -eq 0 ]; then
+  # Ask the user for their preferred model
+  read -r -p "Please enter your preferred OpenAI model (default: gpt-3.5-turbo): " preferred_model
+  preferred_model="${preferred_model:-gpt-3.5-turbo}"
 
-# Update the .env file with the user's preferred model
-sed -i "s/^OPENAI_MODEL=.*/OPENAI_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+  # Update the .env file with the user's preferred model
+  sed -i "s/^OPENAI_MODEL=.*/OPENAI_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+fi
 
 echo "✅ Installation complete! Reload your shell or run:"
 echo "   source $SHELL_RC"

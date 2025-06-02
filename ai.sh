@@ -22,6 +22,8 @@ AI_PROVIDER=${AI_PROVIDER:-openai}
 
 # === Main AI Function ===
 function ai() {
+  local model="${1:-gpt-3.5-turbo}"
+  shift
   local prompt="$*"
   local api_key="${OPENAI_API_KEY:-YOUR_API_KEY_HERE}"
   local temp_full="/tmp/ai_full.json"
@@ -50,6 +52,8 @@ function ai() {
     message=$(echo "$response" | jq -r '.choices[0].message.content // .content // empty')
   fi
 
+  echo "$full_response" > "$temp_full"
+  local message=$(echo "$full_response" | jq -r '.choices[0].message.content // empty')
   if [ -z "$message" ]; then
     echo "❌ Failed to get a valid response. See $temp_full"
     return 1
@@ -91,8 +95,9 @@ function ai() {
 
 # Local AI via Ollama
 function ail() {
+  local model="${1:-mistral}"
+  shift
   local prompt="$*"
-  local model="${OLLAMA_MODEL:-mistral}"
   local temp_response="/tmp/ail_response.txt"
   local temp_commands="/tmp/ail_commands.txt"
 

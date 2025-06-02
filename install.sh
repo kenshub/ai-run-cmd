@@ -56,5 +56,12 @@ else
   echo "✅ All dependencies found."
 fi
 
+# Ask the user for their preferred model
+read -r -p "Please enter your preferred OpenAI model (default: gpt-3.5-turbo): " preferred_model
+preferred_model="${preferred_model:-gpt-3.5-turbo}"
+
+# Update the .env file with the user's preferred model
+sed -i "s/^OPENAI_MODEL=.*/OPENAI_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+
 echo "✅ Installation complete! Reload your shell or run:"
 echo "   source $SHELL_RC"

@@ -10,11 +10,7 @@ Just type `ai do something` or `ail do it offline` and let DMC help you drop com
 
 ## 🚀 Features
 
-- `ai`: Cloud AI (OpenAI GPT-3.5 or GPT-4)
-- `ail`: Local AI (Ollama models like Mistral, LLaMA3, etc.)
-- Fuzzy command picker with `fzf`
-- Safe copy/run/exit prompt
-- No bloat. Just bash and brains.
+See [features.md](features.md) for a complete list of features and capabilities.
 
 ---
 
@@ -30,33 +26,7 @@ bash <(curl -s https://raw.githubusercontent.com/kenshub/ai-run-cmd/main/install
 
 ---
 
-### 🧰 Manual Setup
-If you prefer control.
-
-1. Clone the repo:
-
-```bash
-git clone https://github.com/kenshub/ai-run-cmd.git ~/ai-run-cmd
-```
-
-2. Create and configure your `.env`:
-
-```bash
-cp ~/ai-run-cmd/.env.example ~/ai-run-cmd/.env
-nano ~/ai-run-cmd/.env
-```
-
-3. Safely source the script in your shell config:
-
-```bash
-[ -f ~/ai-run-cmd/ai.sh ] && source ~/ai-run-cmd/ai.sh
-```
-
-4. Reload your shell:
-
-```bash
-source ~/.bashrc  # or source ~/.zshrc
-```
+See [install.md](install.md) for manual setup instructions.
 
 ---
 

@@ -35,7 +35,7 @@ function ai() {
     -H "Authorization: Bearer $api_key" \
     -H "Content-Type: application/json" \
     -d '{
-      "model": "gpt-3.5-turbo",
+      "model": "$OPENAI_MODEL",
       "messages": [{"role": "user", "content": "'"$prompt"'"}],
       "max_tokens": 300
     }')

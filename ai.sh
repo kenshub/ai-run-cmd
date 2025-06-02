@@ -20,6 +20,63 @@ AI_PROVIDER=${AI_PROVIDER:-openai}
 # Load provider functions
 [ -f ~/ai-run-cmd/ai-providers.sh ] && source ~/ai-run-cmd/ai-providers.sh
 
+# === Extract commands from AI response ===
+extract_commands() {
+  local temp_response="$1"
+  local temp_commands="$2"
+  local debug=${3:-0}
+  
+  [[ $debug -eq 1 ]] && echo "🧠 Starting command extraction..."
+  
+  # Clear the commands file
+  > "$temp_commands"
+  
+  # Create a temporary file for storing all extracted commands
+  local temp_extracted=$(mktemp)
+  
+  # Extract triple backtick code blocks
+  [[ $debug -eq 1 ]] && echo "🔍 Extracting triple-backtick code blocks..."
+  
+  # This pattern handles triple backticks with or without language specifiers
+  # and preserves multiline content
+  perl -0777 -ne 'while(/```(?:[a-zA-Z]*\n)?(.*?)```/gs){print "$1\n"}' "$temp_response" >> "$temp_extracted"
+  
+  # Extract inline single-backtick code
+  [[ $debug -eq 1 ]] && echo "🔍 Extracting inline backtick commands..."
+  
+  # This pattern handles inline backticks, avoiding nested backticks
+  perl -ne 'while(/`([^`]+)`/g){print "$1\n"}' "$temp_response" >> "$temp_extracted"
+  
+  # Fallback for command-looking lines (optional)
+  if [[ $debug -eq 1 ]]; then
+    echo "🔍 Extracting fallback shell-looking commands..."
+    grep -E '^\s*(sudo|systemctl|service|curl|docker|npm|yarn|git|echo|rm|cp|mv|cd)' "$temp_response" >> "$temp_extracted"
+  fi
+  
+  # Filter, deduplicate, and clean the extracted commands
+  [[ $debug -eq 1 ]] && echo "🧼 Deduplicating and cleaning..."
+  
+  # Sort, remove duplicates, and clean whitespace
+  cat "$temp_extracted" | 
+    sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | 
+    grep -v '^$' | 
+    sort | 
+    uniq > "$temp_commands"
+  
+  # Clean up
+  rm -f "$temp_extracted"
+  
+  [[ $debug -eq 1 ]] && echo "✅ Command extraction complete. Found $(wc -l < "$temp_commands") commands."
+  
+  # Debug: show extracted commands
+  if [[ $debug -eq 1 ]]; then
+    echo "📋 Extracted commands:"
+    cat "$temp_commands" | while read -r cmd; do
+      echo "  - $cmd"
+    done
+  fi
+}
+
 # === Main AI Function ===
 function ai() {
   local prompt="$*"
@@ -50,14 +107,17 @@ function ai() {
   fi
 
   echo "$message" > "$temp_response"
-  echo "$message" | grep -E '^(\s*)(sudo|systemctl|service|curl|docker|npm|yarn|git|echo|rm|cp|mv|cd)' > "$temp_commands"
+  extract_commands "$temp_response" "$temp_commands" "$DEBUG_AI"
 
   if [ "$DEBUG_AI" = "1" ]; then
     echo -e "\n[DEBUG] Full response saved to: $temp_full"
     cat "$temp_commands"
   fi
 
-  local selected=$(cat "$temp_commands" | fzf --prompt="Pick a command: " --preview="echo {}")
+  local selected=$(fzf --prompt="Pick a command: " \
+    --preview="cat $temp_response" \
+    --preview-window=up:wrap < "$temp_commands")
+
   if [ -z "$selected" ]; then
     echo "⚠️ No command selected."
     return 1
@@ -101,7 +161,7 @@ function ail() {
   fi
 
   echo "$response" > "$temp_response"
-  echo "$response" | grep -E '^(\s*)(sudo|systemctl|service|curl|docker|npm|yarn|git|echo|rm|cp|mv|cd)' > "$temp_commands"
+  extract_commands "$temp_response" "$temp_commands" 0
 
   local selected=$(cat "$temp_commands" | fzf --prompt="Pick a command: " --preview="echo {}")
   if [ -z "$selected" ]; then

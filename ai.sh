@@ -8,7 +8,7 @@
 #  ----------------------------------------------------------------------------
 
 # === Load .env if available ===
-[ -f .env ] && export $(grep -v '^#' .env | xargs)
+[ -f ~/ai-run-cmd/.env ] && export $(grep -v '^#' ~/ai-run-cmd/.env | xargs)
 
 # Set defaults if not provided
 OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
@@ -22,10 +22,7 @@ AI_PROVIDER=${AI_PROVIDER:-openai}
 
 # === Main AI Function ===
 function ai() {
-  local model="${1:-gpt-3.5-turbo}"
-  shift
   local prompt="$*"
-  local api_key="${OPENAI_API_KEY:-YOUR_API_KEY_HERE}"
   local temp_full="/tmp/ai_full.json"
   local temp_response="/tmp/ai_response.txt"
   local temp_commands="/tmp/ai_commands.txt"
@@ -74,21 +71,24 @@ function ai() {
   fi
 
   echo -e "\n➡️ Selected:\n$selected"
-  echo -e "Choose an action:\n  [r] Run  [c] Copy to clipboard  [x] Exit"
-  read -n1 -rp "> " action
-  echo
 
-  case "$action" in
-    r|R)
-      echo -e "\n▶️ Running:\n$selected"
+  case "$DEFAULT_ACTION" in
+    run|RUN)
       eval "$selected"
       ;;
-    c|C)
+    copy|COPY)
       echo "$selected" | xclip -selection clipboard
       echo "📋 Copied to clipboard."
       ;;
-    x|X|*)
-      echo "❌ Exiting without action."
+    ask|ASK|*)
+      echo -e "Choose an action:\n  [r] Run  [c] Copy to clipboard  [x] Exit"
+      read -n1 -rp "> " action
+      echo
+      case "$action" in
+        r|R) eval "$selected" ;;
+        c|C) echo "$selected" | xclip -selection clipboard; echo "📋 Copied." ;;
+        x|X|*) echo "❌ Exiting." ;;
+      esac
       ;;
   esac
 }

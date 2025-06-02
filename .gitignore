@@ -10,3 +10,4 @@
 
 # Sensitive environment files
 .env
+.env.local

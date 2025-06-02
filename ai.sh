@@ -49,13 +49,6 @@ function ai() {
     message=$(echo "$response" | jq -r '.choices[0].message.content // .content // empty')
   fi
 
-  echo "$full_response" > "$temp_full"
-  local message=$(echo "$full_response" | jq -r '.choices[0].message.content // empty')
-  if [ -z "$message" ]; then
-    echo "❌ Failed to get a valid response. See $temp_full"
-    return 1
-  fi
-
   echo "$message" > "$temp_response"
   echo "$message" | grep -E '^(\s*)(sudo|systemctl|service|curl|docker|npm|yarn|git|echo|rm|cp|mv|cd)' > "$temp_commands"
 

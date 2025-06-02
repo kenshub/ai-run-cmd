@@ -41,11 +41,16 @@ extract_commands() {
   # and preserves multiline content
   perl -0777 -ne 'while(/```(?:[a-zA-Z]*\n)?(.*?)```/gs){print "$1\n"}' "$temp_response" >> "$temp_extracted"
   
-  # Extract inline single-backtick code
-  [[ $debug -eq 1 ]] && echo "🔍 Extracting inline backtick commands..."
-  
-  # This pattern handles inline backticks, avoiding nested backticks
-  perl -ne 'while(/`([^`]+)`/g){print "$1\n"}' "$temp_response" >> "$temp_extracted"
+  # Check if any triple backtick blocks were found
+  if [ ! -s "$temp_extracted" ]; then
+    # If no triple backticks were found, extract inline single-backtick code
+    [[ $debug -eq 1 ]] && echo "🔍 No triple backticks found. Extracting inline backtick commands..."
+    
+    # This pattern handles inline backticks, avoiding nested backticks
+    perl -ne 'while(/`([^`]+)`/g){print "$1\n"}' "$temp_response" >> "$temp_extracted"
+  else
+    [[ $debug -eq 1 ]] && echo "🔍 Triple backticks found. Skipping inline backtick extraction."
+  fi
   
   # Fallback for command-looking lines (optional)
   if [[ $debug -eq 1 ]]; then

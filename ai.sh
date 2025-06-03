@@ -84,10 +84,14 @@ extract_commands() {
 
 # === Main AI Function ===
 function ai() {
-  local prompt="$*"
+  local prompt="${AI_CONTEXT}\n\n$*"
   local temp_full="/tmp/ai_full.json"
   local temp_response="/tmp/ai_response.txt"
   local temp_commands="/tmp/ai_commands.txt"
+  local temp_prompt="/tmp/ai_prompt.txt"
+  
+  # Save the prompt for debugging
+  echo -e "$prompt" > "$temp_prompt"
 
   # Select provider logic
   case "$AI_PROVIDER" in
@@ -120,7 +124,7 @@ function ai() {
   fi
 
   local selected=$(fzf --prompt="Pick a command: " \
-    --preview="cat $temp_response" \
+    --preview="echo -e '=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response" \
     --preview-window=up:wrap < "$temp_commands")
 
   if [ -z "$selected" ]; then

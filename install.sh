@@ -21,12 +21,27 @@ fi
 # Check if .env file already exists
 ENV_EXISTS=0
 if [ -f ~/ai-run-cmd/.env ]; then
-  echo "📄 .env file already exists, keeping your existing configuration."
+  echo "📄 .env file already exists, keeping your existing configuration. Check .env.example for any new config."
   ENV_EXISTS=1
 else
   echo "📄 Creating new .env file from example..."
   cp ~/ai-run-cmd/.env.example ~/ai-run-cmd/.env
+  echo "🔧 Collecting configuration..."
+  read -p "What is your operating system? (e.g. Linux Mint): " user_os
+  read -p "What shell do you use? (e.g. bash): " user_shell
+  read -p "Optional AI prompt context (press enter for default): " user_context
+
+  echo "AI_OS=\"$user_os\"" >> .env
+  echo "AI_SHELL=\"$user_shell\"" >> .env
+  user_context="Act like a terminal assistant. I'm using $user_os and $user_shell. Always respond with full terminal commands I can run. No explanations unless I ask. If it's unsafe, give a warning."
+  echo "AI_CONTEXT=\"$user_context\"" >> .env
+
+
+
+  echo "✅ .env created. Edit it to set your API key and model."
 fi
+
+
 
 # Detect shell rc
 if [ -n "$ZSH_VERSION" ]; then

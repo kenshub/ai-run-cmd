@@ -8,7 +8,29 @@
 #  ----------------------------------------------------------------------------
 
 # === Load .env if available ===
-[ -f ~/ai-run-cmd/.env ] && export $(grep -v '^#' ~/ai-run-cmd/.env | xargs)
+if [ -f ~/ai-run-cmd/.env ]; then
+  # Load environment variables while preserving quotes and special characters
+  while IFS= read -r line || [ -n "$line" ]; do
+    # Skip comments and empty lines
+    if [[ "$line" =~ ^#.*$ ]] || [ -z "$line" ]; then
+      continue
+    fi
+    
+    # Extract variable name and value
+    if [[ "$line" =~ ^([A-Za-z0-9_]+)=(.*)$ ]]; then
+      var_name="${BASH_REMATCH[1]}"
+      var_value="${BASH_REMATCH[2]}"
+      
+      # Remove quotes if present
+      if [[ "$var_value" =~ ^\"(.*)\"$ ]]; then
+        var_value="${BASH_REMATCH[1]}"
+      fi
+      
+      # Export the variable
+      export "$var_name=$var_value"
+    fi
+  done < ~/ai-run-cmd/.env
+fi
 
 # Set defaults if not provided
 OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
@@ -84,22 +106,30 @@ extract_commands() {
 
 # === Main AI Function ===
 function ai() {
-  local prompt="${AI_CONTEXT}\n\n$*"
+  # Debug: Show the raw AI_CONTEXT variable
+  if [ "$DEBUG_AI" = "1" ]; then
+    echo "[DEBUG] AI_CONTEXT: '$AI_CONTEXT'"
+  fi
+
+  # Format the prompt properly with newlines
+  local formatted_prompt
+  printf -v formatted_prompt "%s\n\n%s" "$AI_CONTEXT" "$*"
+  
   local temp_full="/tmp/ai_full.json"
   local temp_response="/tmp/ai_response.txt"
   local temp_commands="/tmp/ai_commands.txt"
   local temp_prompt="/tmp/ai_prompt.txt"
   
   # Save the prompt for debugging
-  echo -e "$prompt" > "$temp_prompt"
+  echo "$formatted_prompt" > "$temp_prompt"
 
   # Select provider logic
   case "$AI_PROVIDER" in
-    openai)    response=$(ai_call_openai "$prompt") ;;
-    ollama)    response=$(ai_call_ollama "$prompt") ;;
-    anthropic) response=$(ai_call_anthropic "$prompt") ;;
-    mistral)   response=$(ai_call_mistral "$prompt") ;;
-    groq)      response=$(ai_call_groq "$prompt") ;;
+    openai)    response=$(ai_call_openai "$formatted_prompt") ;;
+    ollama)    response=$(ai_call_ollama "$formatted_prompt") ;;
+    anthropic) response=$(ai_call_anthropic "$formatted_prompt") ;;
+    mistral)   response=$(ai_call_mistral "$formatted_prompt") ;;
+    groq)      response=$(ai_call_groq "$formatted_prompt") ;;
     *)
       echo "❌ Unknown AI_PROVIDER: $AI_PROVIDER"
       return 1
@@ -112,7 +142,14 @@ function ai() {
   if [[ "$AI_PROVIDER" == "ollama" ]]; then
     message="$response"
   else
-    message=$(echo "$response" | jq -r '.choices[0].message.content // .content // empty')
+    # Try different JSON paths to extract the message content
+    message=$(echo "$response" | jq -r '.choices[0].message.content // .content // .choices[0].text // .message // empty')
+    
+    # Debug: Show the extracted message
+    if [ "$DEBUG_AI" = "1" ]; then
+      echo "[DEBUG] Extracted message:"
+      echo "$message"
+    fi
   fi
 
   echo "$message" > "$temp_response"
@@ -157,13 +194,27 @@ function ai() {
 
 # Local AI via Ollama
 function ail() {
+  # Debug: Show the raw AI_CONTEXT variable
+  if [ "$DEBUG_AI" = "1" ]; then
+    echo "[DEBUG] AI_CONTEXT: '$AI_CONTEXT'"
+  fi
+
   local model="${1:-mistral}"
   shift
-  local prompt="$*"
+  
+  # Format the prompt properly with newlines
+  local formatted_prompt
+  printf -v formatted_prompt "%s\n\n%s" "$AI_CONTEXT" "$*"
+  
   local temp_response="/tmp/ail_response.txt"
   local temp_commands="/tmp/ail_commands.txt"
+  local temp_prompt="/tmp/ail_prompt.txt"
+  
+  # Save the prompt for debugging
+  echo "$formatted_prompt" > "$temp_prompt"
 
-  local response=$(ollama run "$model" "$prompt")
+  # Use printf to ensure proper formatting when passing to Ollama
+  local response=$(printf "%s" "$formatted_prompt" | ollama run "$model")
   if [ -z "$response" ]; then
     echo "❌ No response from Ollama."
     return 1
@@ -172,7 +223,9 @@ function ail() {
   echo "$response" > "$temp_response"
   extract_commands "$temp_response" "$temp_commands" 0
 
-  local selected=$(cat "$temp_commands" | fzf --prompt="Pick a command: " --preview="echo {}")
+  local selected=$(fzf --prompt="Pick a command: " \
+    --preview="echo -e '=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response" \
+    --preview-window=up:wrap < "$temp_commands")
   if [ -z "$selected" ]; then
     echo "⚠️ No command selected."
     return 1

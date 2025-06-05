@@ -42,6 +42,27 @@ AI_PROVIDER=${AI_PROVIDER:-openai}
 # Load provider functions
 [ -f ~/ai-run-cmd/ai-providers.sh ] && source ~/ai-run-cmd/ai-providers.sh
 
+# === Spinner function ===
+spinner() {
+  local pid=$1
+  local delay=0.1
+  local provider=$2
+  local model=$3
+  local spinstr='◐◓◑◒'
+  local info=" $provider ($model)"
+  
+  tput civis  # Hide cursor
+  while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+    local temp=${spinstr#?}
+    printf " %c%s" "$spinstr" "$info"
+    local spinstr=$temp${spinstr%"$temp"}
+    sleep $delay
+    printf "\r"
+  done
+  printf "    \r"
+  tput cnorm  # Show cursor
+}
+
 # === Extract commands from AI response ===
 extract_commands() {
   local temp_response="$1"
@@ -119,6 +140,26 @@ extract_commands() {
 
 # === Main AI Function ===
 function ai() {
+  # Check if the command is to toggle debug mode
+  if [ "$1" = "debug" ]; then
+    local debug_value="$2"
+    case "$debug_value" in
+      on|ON|true|TRUE|1|yes|YES|y|Y)
+        export DEBUG_AI=1
+        echo "🐛 Debug mode enabled"
+        ;;
+      off|OFF|false|FALSE|0|no|NO|n|N)
+        export DEBUG_AI=0
+        echo "🐛 Debug mode disabled"
+        ;;
+      *)
+        echo "ℹ️ Current debug mode: $([ "$DEBUG_AI" = "1" ] && echo "enabled" || echo "disabled")"
+        echo "Usage: ai debug [on|off|true|false|1|0|yes|no]"
+        ;;
+    esac
+    return 0
+  fi
+
   # Debug: Show the raw AI_CONTEXT variable
   if [ "$DEBUG_AI" = "1" ]; then
     echo "[DEBUG] AI_CONTEXT: '$AI_CONTEXT'"
@@ -136,18 +177,45 @@ function ai() {
   # Save the prompt for debugging
   echo "$formatted_prompt" > "$temp_prompt"
 
-  # Select provider logic
+  # Get the current model based on provider
+  local current_model
   case "$AI_PROVIDER" in
-    openai)    response=$(ai_call_openai "$formatted_prompt") ;;
-    ollama)    response=$(ai_call_ollama "$formatted_prompt") ;;
-    anthropic) response=$(ai_call_anthropic "$formatted_prompt") ;;
-    mistral)   response=$(ai_call_mistral "$formatted_prompt") ;;
-    groq)      response=$(ai_call_groq "$formatted_prompt") ;;
+    openai)    current_model="$OPENAI_MODEL" ;;
+    ollama)    current_model="$OLLAMA_MODEL" ;;
+    anthropic) current_model="Claude" ;;
+    mistral)   current_model="Mistral" ;;
+    groq)      current_model="Groq" ;;
+    *)         current_model="Unknown" ;;
+  esac
+
+  # Create a temporary file for the response
+  local temp_response_file=$(mktemp)
+  
+  # Run the API call in the background
+  case "$AI_PROVIDER" in
+    openai)    ai_call_openai "$formatted_prompt" > "$temp_response_file" & ;;
+    ollama)    ai_call_ollama "$formatted_prompt" > "$temp_response_file" & ;;
+    anthropic) ai_call_anthropic "$formatted_prompt" > "$temp_response_file" & ;;
+    mistral)   ai_call_mistral "$formatted_prompt" > "$temp_response_file" & ;;
+    groq)      ai_call_groq "$formatted_prompt" > "$temp_response_file" & ;;
     *)
       echo "❌ Unknown AI_PROVIDER: $AI_PROVIDER"
       return 1
       ;;
   esac
+  
+  # Get the PID of the background process
+  local api_pid=$!
+  
+  # Start the spinner
+  spinner $api_pid "$AI_PROVIDER" "$current_model"
+  
+  # Wait for the background process to complete
+  wait $api_pid
+  
+  # Read the response from the temporary file
+  response=$(cat "$temp_response_file")
+  rm -f "$temp_response_file"
 
   echo "$response" > "$temp_full"
 
@@ -173,8 +241,16 @@ function ai() {
     cat "$temp_commands"
   fi
 
+  # Prepare preview content based on debug setting
+  local preview_cmd
+  if [ "$DEBUG_AI" = "1" ]; then
+    preview_cmd="echo -e '=== DEBUG INFO ===\nProvider: $AI_PROVIDER\nModel: $current_model\n\n=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response"
+  else
+    preview_cmd="echo -e '=== RESPONSE ===\n'; cat $temp_response"
+  fi
+
   local selected=$(fzf --prompt="Pick a command: " \
-    --preview="echo -e '=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response" \
+    --preview="$preview_cmd" \
     --preview-window=up:wrap < "$temp_commands")
 
   if [ -z "$selected" ]; then

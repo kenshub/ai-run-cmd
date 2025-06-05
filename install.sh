@@ -74,19 +74,49 @@ if [ ${#missing[@]} -ne 0 ]; then
   echo "   Fedora:        sudo dnf install ${missing[*]}"
   echo "   Arch:          sudo pacman -S ${missing[*]}"
   echo "   Alpine:        sudo apk add ${missing[*]}"
-  echo "🛠 Please install them manually before using ai/ail."
+  echo "🛠 Please install them manually before using the ai command."
 else
   echo "✅ All dependencies found."
 fi
 
-# Only ask for model preference if we created a new .env file
+# Only ask for preferences if we created a new .env file
 if [ $ENV_EXISTS -eq 0 ]; then
-  # Ask the user for their preferred model
-  read -r -p "Please enter your preferred OpenAI model (default: gpt-3.5-turbo): " preferred_model
-  preferred_model="${preferred_model:-gpt-3.5-turbo}"
+  # Ask the user for their preferred AI provider
+  echo "Available AI providers: openai, ollama, anthropic, mistral, groq"
+  read -r -p "Please enter your preferred AI provider (default: openai): " preferred_provider
+  preferred_provider="${preferred_provider:-openai}"
 
-  # Update the .env file with the user's preferred model
-  sed -i "s/^OPENAI_MODEL=.*/OPENAI_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+  # Update the .env file with the user's preferred provider
+  sed -i "s/^AI_PROVIDER=.*/AI_PROVIDER=${preferred_provider}/" ~/ai-run-cmd/.env
+
+  # Ask for model based on provider
+  case "$preferred_provider" in
+    openai)
+      read -r -p "Please enter your preferred OpenAI model (default: gpt-3.5-turbo): " preferred_model
+      preferred_model="${preferred_model:-gpt-3.5-turbo}"
+      sed -i "s/^OPENAI_MODEL=.*/OPENAI_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+      ;;
+    ollama)
+      read -r -p "Please enter your preferred Ollama model (default: mistral): " preferred_model
+      preferred_model="${preferred_model:-mistral}"
+      sed -i "s/^OLLAMA_MODEL=.*/OLLAMA_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+      ;;
+    anthropic)
+      read -r -p "Please enter your preferred Claude model (default: claude-3-opus): " preferred_model
+      preferred_model="${preferred_model:-claude-3-opus}"
+      sed -i "s/^CLAUDE_MODEL=.*/CLAUDE_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+      ;;
+    mistral)
+      read -r -p "Please enter your preferred Mistral model (default: mistral-tiny): " preferred_model
+      preferred_model="${preferred_model:-mistral-tiny}"
+      sed -i "s/^MISTRAL_MODEL=.*/MISTRAL_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+      ;;
+    groq)
+      read -r -p "Please enter your preferred Groq model (default: llama3-70b): " preferred_model
+      preferred_model="${preferred_model:-llama3-70b}"
+      sed -i "s/^GROQ_MODEL=.*/GROQ_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+      ;;
+  esac
 fi
 
 echo "✅ Installation complete! Reload your shell or run:"

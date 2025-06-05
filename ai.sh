@@ -74,10 +74,23 @@ extract_commands() {
     [[ $debug -eq 1 ]] && echo "🔍 Triple backticks found. Skipping inline backtick extraction."
   fi
   
-  # Fallback for command-looking lines (optional)
-  if [[ $debug -eq 1 ]]; then
-    echo "🔍 Extracting fallback shell-looking commands..."
-    grep -E '^\s*(sudo|systemctl|service|curl|docker|npm|yarn|git|echo|rm|cp|mv|cd)' "$temp_response" >> "$temp_extracted"
+  # Fallback for command-looking lines (always enabled)
+  [[ $debug -eq 1 ]] && echo "🔍 Extracting fallback shell-looking commands..."
+  grep -E '^\s*(sudo|systemctl|service|curl|docker|npm|yarn|git|echo|rm|cp|mv|cd|apt|apt-get|yum|dnf|pacman|brew|python|python3|node|go|java|gcc|make|./|sh|bash|zsh|find|grep|awk|sed|cat|ls|mkdir|touch|chmod|chown)' "$temp_response" >> "$temp_extracted"
+
+  # Check if any commands were extracted
+  if [ ! -s "$temp_extracted" ]; then
+    # If no commands were found, check if the response starts with a command
+    [[ $debug -eq 1 ]] && echo "🔍 No commands found. Checking if response starts with a command..."
+    
+    # Get the first non-empty line of the response
+    local first_line=$(grep -v '^$' "$temp_response" | head -n 1)
+    
+    # Check if the first line looks like a command (starts with common command prefixes)
+    if [[ "$first_line" =~ ^[[:space:]]*(sudo|systemctl|service|curl|docker|npm|yarn|git|echo|rm|cp|mv|cd|apt|apt-get|yum|dnf|pacman|brew|python|python3|node|go|java|gcc|make|./|sh|bash|zsh|find|grep|awk|sed|cat|ls|mkdir|touch|chmod|chown|tar) ]]; then
+      [[ $debug -eq 1 ]] && echo "✅ Found command at start of response: $first_line"
+      echo "$first_line" >> "$temp_extracted"
+    fi
   fi
   
   # Filter, deduplicate, and clean the extracted commands
@@ -192,67 +205,5 @@ function ai() {
   esac
 }
 
-# Local AI via Ollama
-function ail() {
-  # Debug: Show the raw AI_CONTEXT variable
-  if [ "$DEBUG_AI" = "1" ]; then
-    echo "[DEBUG] AI_CONTEXT: '$AI_CONTEXT'"
-  fi
-
-  local model="${1:-mistral}"
-  shift
-  
-  # Format the prompt properly with newlines
-  local formatted_prompt
-  printf -v formatted_prompt "%s\n\n%s" "$AI_CONTEXT" "$*"
-  
-  local temp_response="/tmp/ail_response.txt"
-  local temp_commands="/tmp/ail_commands.txt"
-  local temp_prompt="/tmp/ail_prompt.txt"
-  
-  # Save the prompt for debugging
-  echo "$formatted_prompt" > "$temp_prompt"
-
-  # Use printf to ensure proper formatting when passing to Ollama
-  local response=$(printf "%s" "$formatted_prompt" | ollama run "$model")
-  if [ -z "$response" ]; then
-    echo "❌ No response from Ollama."
-    return 1
-  fi
-
-  echo "$response" > "$temp_response"
-  extract_commands "$temp_response" "$temp_commands" 0
-
-  local selected=$(fzf --prompt="Pick a command: " \
-    --preview="echo -e '=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response" \
-    --preview-window=up:wrap < "$temp_commands")
-  if [ -z "$selected" ]; then
-    echo "⚠️ No command selected."
-    return 1
-  fi
-
-  echo -e "\n➡️ Selected:\n$selected"
-  echo -e "Choose an action:\n  [r] Run  [c] Copy to clipboard  [x] Exit"
-  read -n1 -rp "> " action
-  echo
-
-  case "$DEFAULT_ACTION" in
-    run|RUN)
-      eval "$selected"
-      ;;
-    copy|COPY)
-      echo "$selected" | xclip -selection clipboard
-      echo "📋 Copied to clipboard."
-      ;;
-    ask|ASK|*)
-      echo -e "Choose an action:\n  [r] Run  [c] Copy to clipboard  [x] Exit"
-      read -n1 -rp "> " action
-      echo
-      case "$action" in
-        r|R) eval "$selected" ;;
-        c|C) echo "$selected" | xclip -selection clipboard; echo "📋 Copied." ;;
-        x|X|*) echo "❌ Exiting." ;;
-      esac
-      ;;
-  esac
-}
+# Note: Local AI is now supported through the main ai() function
+# by setting AI_PROVIDER=ollama and OLLAMA_MODEL to your desired model

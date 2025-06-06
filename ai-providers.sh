@@ -70,3 +70,38 @@ function ai_call_groq() {
       "messages": [{"role": "user", "content": '"$escaped_prompt"'}]
     }'
 }
+
+# Function to set the AI provider
+set_provider() {
+  local provider="$1"
+  case "$provider" in
+    openai|ollama|anthropic|mistral|groq)
+      export AI_PROVIDER="$provider"
+      echo "✅ AI_PROVIDER set to $provider"
+      ;;
+    *)
+      echo "❌ Invalid AI provider: $provider"
+      list_providers
+      return 1
+      ;;
+  esac
+}
+
+# Function to list available AI providers
+list_providers() {
+  echo "Available AI providers:"
+  echo "  - openai"
+  echo "  - ollama"
+  echo "  - anthropic"
+  echo "  - mistral"
+  echo "  - groq"
+}
+
+# Function to handle the provider command
+provider() {
+  if [ -z "$1" ]; then
+    list_providers
+  else
+    set_provider "$1"
+  fi
+}

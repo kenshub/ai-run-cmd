@@ -4,7 +4,7 @@
 ![AI-Run-CMD Logo](img/logos/ai_run_cmd_256x256.png)
 
 A fun and functional terminal AI assistant using ChatGPT or local models via Ollama.
-Just type `ai do something` or `ail do it offline` and let DMC help you drop command-line hits.
+Just type `ai do something` and let DMC help you drop command-line hits. Works with both cloud-based and local AI models.
 
 ---
 

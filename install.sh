@@ -33,7 +33,7 @@ else
 
   echo "AI_OS=\"$user_os\"" >> .env
   echo "AI_SHELL=\"$user_shell\"" >> .env
-  user_context="Act like a terminal assistant. I'm using $user_os and $user_shell. Always respond with full terminal commands I can run. No explanations unless I ask. If it's unsafe, give a warning."
+  user_context="Act like a terminal assistant. I'm using $user_os and $user_shell. Always respond with full terminal commands I can run inside ticks or quotes. No explanations unless I ask. If it's unsafe, give a warning."
   echo "AI_CONTEXT=\"$user_context\"" >> .env
 
 

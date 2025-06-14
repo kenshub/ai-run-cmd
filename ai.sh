@@ -44,6 +44,10 @@
  DEFAULT_ACTION=${DEFAULT_ACTION:-ask}
  DEBUG_AI=${DEBUG_AI:-0}
  AI_PROVIDER=${AI_PROVIDER:-openai}
+ AI_CONTEXT_BEHAVIOR=${AI_CONTEXT_BEHAVIOR:-"Act like a terminal assistant."}
+ AI_CONTEXT_ENVIRONMENT=${AI_CONTEXT_ENVIRONMENT:-"I'm using Linux Mint and Bash."}
+ AI_CONTEXT_FORMAT=${AI_CONTEXT_FORMAT:-"Always respond with full terminal commands. No explanations unless I ask."}
+ AI_CONTEXT_WARNING=${AI_CONTEXT_WARNING:-"Warn me if the command is dangerous."}
  
 
  # Load provider functions
@@ -159,17 +163,42 @@
     provider "${@:2}"
     return 0
   fi
+
+  # Initialize AI_CONTEXT_ACTION
+  AI_CONTEXT_ACTION=""
+
+  # Easter egg: if the user types "rap", add a bit of fun to the context
+  if [ "$1" = "rap" ]; then
+    # Randomly choose between two rap-style prompts
+    if [ $((RANDOM % 2)) -eq 0 ]; then
+      AI_CONTEXT_ACTION="Respond in a rap style."
+    else
+      AI_CONTEXT_ACTION="Answer in a rhyme."
+    fi
+    # Remove "rap" from the arguments
+    shift
+  fi
+
+  # Explain command
+  if [ "$1" = "explain" ]; then
+    AI_CONTEXT_ACTION="Explain the command and what it does."
+    # Remove "explain" from the arguments
+    shift
+  fi
+
+  # Assemble the final context
+  local final_context="${AI_CONTEXT_BEHAVIOR} ${AI_CONTEXT_ACTION} ${AI_CONTEXT_ENVIRONMENT} ${AI_CONTEXT_FORMAT} ${AI_CONTEXT_WARNING}"
  
 
   # Debug: Show the raw AI_CONTEXT variable
   if [ "$DEBUG_AI" = "1" ]; then
-  echo "[DEBUG] AI_CONTEXT: '$AI_CONTEXT'"
+  echo "[DEBUG] AI_CONTEXT: '$final_context'"
   fi
  
 
   # Format the prompt properly with newlines
   local formatted_prompt
-  printf -v formatted_prompt "%s\n\n%s" "$AI_CONTEXT" "$*"
+  printf -v formatted_prompt "%s\n\n%s" "$final_context" "$*"
  
 
   local temp_full="/tmp/ai_full.json"
@@ -230,27 +259,27 @@
   # Prepare preview content based on debug setting
   local preview_cmd
   if [ "$DEBUG_AI" = "1" ]; then
-  # Get the current model based on provider
-  local current_model
-  case "$AI_PROVIDER" in
-  openai)    current_model="$OPENAI_MODEL" ;;
-  ollama)    current_model="$OLLAMA_MODEL" ;;
-  anthropic) current_model="Claude" ;;
-  mistral)   current_model="Mistral" ;;
-  groq)      response=$(ai_call_groq "$formatted_prompt") ;;
-  *)         current_model="Unknown" ;;
-  esac
+    # Get the current model based on provider
+    local current_model
+    case "$AI_PROVIDER" in
+    openai)    current_model="$OPENAI_MODEL" ;;
+    ollama)    current_model="$OLLAMA_MODEL" ;;
+    anthropic) current_model="Claude" ;;
+    mistral)   current_model="Mistral" ;;
+    groq)      response=$(ai_call_groq "$formatted_prompt") ;;
+    *)         current_model="Unknown" ;;
+    esac
  
 
-  preview_cmd="echo -e '=== DEBUG INFO ===\nProvider: $AI_PROVIDER\nModel: $current_model\n\n=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response"
+    preview_cmd="echo -e '=== DEBUG INFO ===\nProvider: $AI_PROVIDER\nModel: $current_model\n\n=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response"
   else
-  preview_cmd="echo -e '=== RESPONSE ===\n'; cat $temp_response"
+    preview_cmd="cat $temp_response"
   fi
  
 
   local selected=$( (cat "$temp_commands"; echo "Exit") | fzf --prompt="Pick a command: " \
   --preview="$preview_cmd" \
-  --preview-window=up:wrap)
+  --preview-window=up:70%:wrap)
  
 
   if [ -z "$selected" ]; then
@@ -275,10 +304,10 @@
     # If in GNU Screen, stuff the command into the input buffer
     screen -X stuff "$selected"
   elif [ -n "$BASH_VERSION" ]; then
-    # For Bash, add to history. The user can press Up to access it.
-    history -s "$selected"
-    echo "$selected"
-    echo "Command added to history. Press Up arrow to access it."
+    # For Bash, use read -e to allow editing
+    read -e -i "$selected" -p "Run command: " command_to_run
+    history -s "$command_to_run"
+    eval "$command_to_run"
   else
     # Fallback for other shells
     echo "$selected"

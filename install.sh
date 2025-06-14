@@ -61,7 +61,7 @@ fi
 echo "🔍 Checking dependencies..."
 
 missing=()
-for cmd in jq gum xclip curl; do
+for cmd in jq fzf xclip curl; do
   if ! command -v $cmd &> /dev/null; then
     missing+=($cmd)
   fi

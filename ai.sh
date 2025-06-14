@@ -248,7 +248,9 @@
   fi
  
 
-  local selected=$( (cat "$temp_commands"; echo "Exit") | gum filter --prompt="Pick a command: " --height 10)
+  local selected=$( (cat "$temp_commands"; echo "Exit") | fzf --prompt="Pick a command: " \
+  --preview="$preview_cmd" \
+  --preview-window=up:wrap)
  
 
   if [ -z "$selected" ]; then
@@ -273,10 +275,10 @@
     # If in GNU Screen, stuff the command into the input buffer
     screen -X stuff "$selected"
   elif [ -n "$BASH_VERSION" ]; then
-    # For Bash, add to history. The user can press Up to access it.
-    history -s "$selected"
-    echo "$selected"
-    echo "Command added to history. Press Up arrow to access it."
+    # For Bash, use read -e to allow editing
+    read -e -i "$selected" -p "Run command: " command_to_run
+    history -s "$command_to_run"
+    eval "$command_to_run"
   else
     # Fallback for other shells
     echo "$selected"

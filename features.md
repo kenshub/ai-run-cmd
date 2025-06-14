@@ -7,7 +7,7 @@ AI Run CMD is a terminal assistant that helps you generate and execute commands 
 -   **Unified AI Interface (`ai`):** A single command that supports both cloud-based and local AI models.
 -   **Multiple AI Providers:** Supports OpenAI, Ollama (local), Anthropic, Mistral, and Groq.
 -   **Model Selection:** Choose your preferred AI provider and model through environment variables.
--   **Command Picker:** Uses `gum` to provide an interactive interface for selecting commands from the AI's suggestions.
+-   **Fuzzy Command Picker:** Uses `fzf` to provide an interactive interface for selecting commands from the AI's suggestions.
 -   **Safe Execution:** Prompts you to confirm before running any command, preventing accidental execution of potentially harmful commands.
 -   **Copy to Clipboard:** Easily copy the generated command to your clipboard for later use.
 -   **Lightweight and Simple:** Implemented in bash with minimal dependencies.

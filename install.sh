@@ -81,12 +81,12 @@ fi
 
 # Only ask for preferences if we created a new .env file
 if [ $ENV_EXISTS -eq 0 ]; then
-  # Ask the user for their preferred AI provider
+  # Ask you for your preferred AI provider
   echo "Available AI providers: openai, ollama, anthropic, mistral, groq"
   read -r -p "Please enter your preferred AI provider (default: openai): " preferred_provider
   preferred_provider="${preferred_provider:-openai}"
 
-  # Update the .env file with the user's preferred provider
+  # Update the .env file with your preferred provider
   sed -i "s/^AI_PROVIDER=.*/AI_PROVIDER=${preferred_provider}/" ~/ai-run-cmd/.env
 
   # Ask for model based on provider
@@ -119,5 +119,9 @@ if [ $ENV_EXISTS -eq 0 ]; then
   esac
 fi
 
-echo "✅ Installation complete! Reload your shell or run:"
-echo "   source $SHELL_RC"
+echo "✅ Installation complete! Reloading shell..."
+if [ -n "$ZSH_VERSION" ]; then
+  exec zsh
+else
+  exec bash
+fi

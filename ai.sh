@@ -248,9 +248,9 @@
   fi
  
 
-  local selected=$(fzf --prompt="Pick a command: " \
+  local selected=$( (cat "$temp_commands"; echo "Exit") | fzf --prompt="Pick a command: " \
   --preview="$preview_cmd" \
-  --preview-window=up:wrap < "$temp_commands")
+  --preview-window=up:wrap)
  
 
   if [ -z "$selected" ]; then
@@ -259,28 +259,30 @@
   fi
  
 
-  echo -e "\n➡️ Selected:\n$selected"
  
 
-  case "$DEFAULT_ACTION" in
-  run|RUN)
-  eval "$selected"
-  ;;
-  copy|COPY)
-  echo "$selected" | xclip -selection clipboard
-  echo "📋 Copied to clipboard."
-  ;;
-  ask|ASK|*)
-  echo -e "Choose an action:\n  [r] Run  [c] Copy to clipboard  [x] Exit"
-  read -n1 -rp "> " action
-  echo
-  case "$action" in
-  r|R) eval "$selected" ;;
-  c|C) echo "$selected" | xclip -selection clipboard; echo "📋 Copied." ;;
-  x|X|*) echo "❌ Exiting." ;;
-  esac
-  ;;
-  esac
+  if [ "$selected" = "Exit" ]; then
+    return 0 # Exit the function without printing anything
+  fi
+
+  if [ -n "$ZSH_VERSION" ]; then
+    # For Zsh, print -z pushes the command to the editing buffer
+    print -z "$selected"
+  elif [ -n "$TMUX" ]; then
+    # If in tmux, send the keys to the pane
+    tmux send-keys -l -- "$selected"
+  elif [ -n "$STY" ]; then
+    # If in GNU Screen, stuff the command into the input buffer
+    screen -X stuff "$selected"
+  elif [ -n "$BASH_VERSION" ]; then
+    # For Bash, add to history. The user can press Up to access it.
+    history -s "$selected"
+    echo "$selected"
+    echo "Command added to history. Press Up arrow to access it."
+  else
+    # Fallback for other shells
+    echo "$selected"
+  fi
  }
  
 

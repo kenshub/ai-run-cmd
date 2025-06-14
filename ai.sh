@@ -248,9 +248,7 @@
   fi
  
 
-  local selected=$( (cat "$temp_commands"; echo "Exit") | fzf --prompt="Pick a command: " \
-  --preview="$preview_cmd" \
-  --preview-window=up:wrap)
+  local selected=$( (cat "$temp_commands"; echo "Exit") | gum filter --prompt="Pick a command: " --height 10)
  
 
   if [ -z "$selected" ]; then

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "📦 Installing AI RUN CMD..."
+echo "📦 Installing AI RUN CMD v0.2..."
 
 # Check if folder exists
 if [ -d ~/ai-run-cmd ]; then
@@ -61,7 +61,7 @@ fi
 echo "🔍 Checking dependencies..."
 
 missing=()
-for cmd in jq fzf xclip curl; do
+for cmd in jq gum xclip curl; do
   if ! command -v $cmd &> /dev/null; then
     missing+=($cmd)
   fi

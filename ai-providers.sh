@@ -3,9 +3,11 @@
 # === OpenAI ===
 function ai_call_openai() {
   local prompt="$1"
-  # Escape the prompt for JSON
-  local escaped_prompt=$(echo "$prompt" | jq -Rs .)
-  
+  echo "[DEBUG] Raw prompt: $prompt"
+  # Escape the prompt for JSON using printf and parameter expansion
+  escaped_prompt=$(printf '%s' "$prompt" | awk '{gsub(/%/, "%25"); gsub(/\\/, "%5C"); gsub(/\r/, "%0D"); gsub(/\n/, "%0A"); gsub(/"/, "%22"); print}')
+  echo "[DEBUG] Escaped prompt: $escaped_prompt"
+
   curl -s https://api.openai.com/v1/chat/completions \
     -H "Authorization: Bearer $OPENAI_API_KEY" \
     -H "Content-Type: application/json" \
@@ -27,9 +29,11 @@ function ai_call_ollama() {
 # === Anthropic (Claude) ===
 function ai_call_anthropic() {
   local prompt="$1"
-  # Escape the prompt for JSON
-  local escaped_prompt=$(echo "$prompt" | jq -Rs .)
-  
+  echo "[DEBUG] Raw prompt: $prompt"
+  # Escape the prompt for JSON using printf and parameter expansion
+  escaped_prompt=$(printf '%s' "$prompt" | awk '{gsub(/%/, "%25"); gsub(/\\/, "%5C"); gsub(/\r/, "%0D"); gsub(/\n/, "%0A"); gsub(/"/, "%22"); print}')
+  echo "[DEBUG] Escaped prompt: $escaped_prompt"
+
   curl -s https://api.anthropic.com/v1/messages \
     -H "x-api-key: $ANTHROPIC_API_KEY" \
     -H "anthropic-version: 2023-06-01" \
@@ -44,9 +48,11 @@ function ai_call_anthropic() {
 # === Mistral API ===
 function ai_call_mistral() {
   local prompt="$1"
-  # Escape the prompt for JSON
-  local escaped_prompt=$(echo "$prompt" | jq -Rs .)
-  
+  echo "[DEBUG] Raw prompt: $prompt"
+  # Escape the prompt for JSON using printf and parameter expansion
+  escaped_prompt=$(printf '%s' "$prompt" | awk '{gsub(/%/, "%25"); gsub(/\\/, "%5C"); gsub(/\r/, "%0D"); gsub(/\n/, "%0A"); gsub(/"/, "%22"); print}')
+  echo "[DEBUG] Escaped prompt: $escaped_prompt"
+
   curl -s https://api.mistral.ai/v1/chat/completions \
     -H "Authorization: Bearer $MISTRAL_API_KEY" \
     -H "Content-Type: application/json" \
@@ -59,9 +65,11 @@ function ai_call_mistral() {
 # === Groq ===
 function ai_call_groq() {
   local prompt="$1"
-  # Escape the prompt for JSON
-  local escaped_prompt=$(echo "$prompt" | jq -Rs .)
-  
+  echo "[DEBUG] Raw prompt: $prompt"
+  # Escape the prompt for JSON using printf and parameter expansion
+  escaped_prompt=$(printf '%s' "$prompt" | awk '{gsub(/%/, "%25"); gsub(/\\/, "%5C"); gsub(/\r/, "%0D"); gsub(/\n/, "%0A"); gsub(/"/, "%22"); print}')
+  echo "[DEBUG] Escaped prompt: $escaped_prompt"
+
   curl -s https://api.groq.com/openai/v1/chat/completions \
     -H "Authorization: Bearer $GROQ_API_KEY" \
     -H "Content-Type: application/json" \

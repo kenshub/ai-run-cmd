@@ -228,6 +228,7 @@
  
 
   echo "$response" > "$temp_full"
+  echo "[DEBUG] Raw API response: $response"
  
 
   # Extract message depending on provider format
@@ -235,8 +236,20 @@
   message="$response"
   else
   # Try different JSON paths to extract the message content
-  message=$(echo "$response" | jq -r '.choices[0].message.content // .content // .choices[0].text // .message // empty')
- 
+  # Extract message content using bash string manipulation
+  message=$(
+    if echo "$response" | grep -q '"choices":'; then
+      echo "$response" | sed -n 's/.*"choices":.*"content":"\([^"]*\)".*/\1/p'
+    elif echo "$response" | grep -q '"content":'; then
+      echo "$response" | sed -n 's/.*"content":"\([^"]*\)".*/\1/p'
+    elif echo "$response" | grep -q '"choices":.*"text":'; then
+      echo "$response" | sed -n 's/.*"choices":.*"text":"\([^"]*\)".*/\1/p'
+    elif echo "$response" | grep -q '"message":'; then
+      echo "$response" | sed -n 's/.*"message":"\([^"]*\)".*/\1/p'
+    else
+      echo ""
+    fi
+  )
 
   # Debug: Show the extracted message
   if [ "$DEBUG_AI" = "1" ]; then
@@ -277,21 +290,54 @@
   fi
  
 
-  local selected=$( (cat "$temp_commands"; echo "Exit") | fzf --prompt="Pick a command: " \
-  --preview="$preview_cmd" \
-  --preview-window=up:70%:wrap)
+  # Check if fzf is installed
+  if command -v fzf &> /dev/null; then
+    local selected=$( (cat "$temp_commands"; echo "Exit") | fzf --prompt="Pick a command: " \
+    --preview="$preview_cmd" \
+    --preview-window=up:70%:wrap)
  
 
-  if [ -z "$selected" ]; then
-  echo "⚠️ No command selected."
-  return 1
-  fi
+    if [ -z "$selected" ]; then
+      echo "⚠️ No command selected."
+      return 1
+    fi
  
 
+    if [ "$selected" = "Exit" ]; then
+      return 0 # Exit the function without printing anything
+    fi
+  else
+    # Use a bash menu as a fallback for fzf
+    local commands_array
+    local i=1
+    while IFS= read -r command; do
+      commands_array[$i]="$command"
+      i=$((i+1))
+    done < "$temp_commands"
+    commands_array[$i]="Exit"
  
 
-  if [ "$selected" = "Exit" ]; then
-    return 0 # Exit the function without printing anything
+    echo "Pick a command:"
+    for j in $(seq 1 $i); do
+      echo "$j) ${commands_array[$j]}"
+    done
+ 
+
+    read -p "Enter your choice (1-$i): " choice
+ 
+
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt $i ]; then
+      echo "⚠️ Invalid choice."
+      return 1
+    fi
+ 
+
+    local selected="${commands_array[$choice]}"
+ 
+
+    if [ "$selected" = "Exit" ]; then
+      return 0 # Exit the function without printing anything
+    fi
   fi
 
   if [ -n "$ZSH_VERSION" ]; then

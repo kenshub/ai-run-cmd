@@ -47,7 +47,7 @@
  AI_CONTEXT_BEHAVIOR=${AI_CONTEXT_BEHAVIOR:-"Act like a terminal assistant."}
  AI_CONTEXT_ENVIRONMENT=${AI_CONTEXT_ENVIRONMENT:-"I'm using Linux Mint and Bash."}
  AI_CONTEXT_FORMAT=${AI_CONTEXT_FORMAT:-"Always respond with full terminal commands. No explanations unless I ask."}
- AI_CONTEXT_WARNING=${AI_CONTEXT_WARNING:-"Warn me if the command is dangerous."}
+ AI_CONTEXT_WARNING=${AI_CONTEXT_WARNING:-" "}
  
 
  # Load provider functions
@@ -187,18 +187,20 @@
   fi
 
   # Assemble the final context
-  local final_context="${AI_CONTEXT_BEHAVIOR} ${AI_CONTEXT_ACTION} ${AI_CONTEXT_ENVIRONMENT} ${AI_CONTEXT_FORMAT} ${AI_CONTEXT_WARNING}"
+  local context_prefix="${AI_CONTEXT_BEHAVIOR} ${AI_CONTEXT_ACTION} ${AI_CONTEXT_ENVIRONMENT} ${AI_CONTEXT_WARNING} ${AI_CONTEXT_FORMAT} "
+  local context_suffix=" "
+
  
 
   # Debug: Show the raw AI_CONTEXT variable
   if [ "$DEBUG_AI" = "1" ]; then
-  echo "[DEBUG] AI_CONTEXT: '$final_context'"
+  echo "[DEBUG] AI_CONTEXT: '$context_prefix' +command+ '$context_suffix'"
   fi
  
 
   # Format the prompt properly with newlines
   local formatted_prompt
-  printf -v formatted_prompt "%s\n\n%s" "$final_context" "$*"
+  printf -v formatted_prompt "%s\n\n%s" "$context_prefix" "$*" "$context_suffix"
  
 
   local temp_full="/tmp/ai_full.json"
@@ -240,7 +242,7 @@
 
   # Debug: Show the extracted message
   if [ "$DEBUG_AI" = "1" ]; then
-  echo "[DEBUG] Extracted message:"
+  echo "Extracted message:"
   echo "$message"
   fi
   fi
@@ -271,7 +273,7 @@
     esac
  
 
-    preview_cmd="echo -e '=== DEBUG INFO ===\nProvider: $AI_PROVIDER\nModel: $current_model\n\n=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response"
+    preview_cmd="echo -e '=== DEBUG INFO ===\nAI RUN CMD v0.5\nProvider: $AI_PROVIDER\nModel: $current_model\n\n=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response"
   else
     preview_cmd="cat $temp_response"
   fi

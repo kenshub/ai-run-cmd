@@ -8,14 +8,19 @@ if [ -d ~/ai-run-cmd ]; then
   echo "📁 ~/ai-run-cmd already exists."
 
   if [ -d ~/ai-run-cmd/.git ]; then
-    echo "🔄 Updating existing repo..."
+    echo "🔄 Updating existing repo via git..."
     git -C ~/ai-run-cmd pull
   else
-    echo "⚠️ Folder exists but is not a Git repo. Please move or remove it first."
-    exit 1
+    echo "OK, not a git repo, so we will not be able to auto-update."
   fi
 else
-  git clone https://github.com/kenshub/ai-run-cmd.git ~/ai-run-cmd
+  if command -v git &> /dev/null; then
+    echo "Cloning repo via git..."
+    git clone https://github.com/kenshub/ai-run-cmd.git ~/ai-run-cmd
+  else
+    echo "git not found. Please install git or download the zip and run this script again."
+    exit 1
+  fi
 fi
 
 # Check if .env file already exists
@@ -60,8 +65,26 @@ fi
 # Dependency check
 echo "🔍 Checking dependencies..."
 
+# Function to install packages
+install_packages() {
+  local package_manager=$1
+  shift
+  local packages=("$@")
+  case $package_manager in
+    apt) sudo apt-get install -y "${packages[@]}" ;;
+    dnf) sudo dnf install -y "${packages[@]}" ;;
+    pacman) sudo pacman -S --noconfirm "${packages[@]}" ;;
+    apk) sudo apk add "${packages[@]}" ;;
+    brew) brew install "${packages[@]}" ;;
+    *)
+      echo "Unsupported package manager: $package_manager"
+      return 1
+      ;;
+  esac
+}
+
 missing=()
-for cmd in jq fzf xclip curl; do
+for cmd in jq fzf curl git; do
   if ! command -v $cmd &> /dev/null; then
     missing+=($cmd)
   fi
@@ -69,12 +92,49 @@ done
 
 if [ ${#missing[@]} -ne 0 ]; then
   echo "⚠️ Missing dependencies: ${missing[*]}"
-  echo "👉 You can install them using your system's package manager. For example:"
-  echo "   Debian/Ubuntu: sudo apt install ${missing[*]}"
-  echo "   Fedora:        sudo dnf install ${missing[*]}"
-  echo "   Arch:          sudo pacman -S ${missing[*]}"
-  echo "   Alpine:        sudo apk add ${missing[*]}"
-  echo "🛠 Please install them manually before using the ai command."
+  echo "👉 Attempting to install missing dependencies..."
+
+  # Detect OS and package manager
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if command -v apt-get &>/dev/null; then
+      install_packages apt "${missing[@]}"
+    elif command -v dnf &>/dev/null; then
+      install_packages dnf "${missing[@]}"
+    elif command -v pacman &>/dev/null; then
+      install_packages pacman "${missing[@]}"
+    elif command -v apk &>/dev/null; then
+      install_packages apk "${missing[@]}"
+    else
+      echo "Could not detect package manager on Linux. Please install the following packages manually: ${missing[*]}"
+    fi
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    if command -v brew &>/dev/null; then
+      install_packages brew "${missing[@]}"
+    else
+      echo "Homebrew not found. Please install Homebrew first, then install the following packages manually: ${missing[*]}"
+    fi
+  elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    echo "On Windows, please install 'jq' manually."
+    echo "Download it from https://jqlang.org/download/"
+    echo "Then, add the executable to your system's PATH."
+    echo "Alternatively, if you use Chocolatey, you can run: choco install jq"
+  else
+    echo "Unsupported OS: $OSTYPE. Please install the following packages manually: ${missing[*]}"
+  fi
+
+  # Verify installation
+  post_install_missing=()
+  for cmd in "${missing[@]}"; do
+    if ! command -v $cmd &> /dev/null; then
+      post_install_missing+=($cmd)
+    fi
+  done
+
+  if [ ${#post_install_missing[@]} -ne 0 ]; then
+    echo "Failed to install: ${post_install_missing[*]}. Please install them manually."
+  else
+    echo "✅ All dependencies are now installed."
+  fi
 else
   echo "✅ All dependencies found."
 fi

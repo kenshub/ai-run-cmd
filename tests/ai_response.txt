@@ -1,6 +1,28 @@
-Yo, yo, yo, let me assist with that query,
-Gonna check the startup log, no need to worry.
-Type in "`tail -n 100 /var/log/syslog`",
-And watch as the info begins to unfold.
-But be careful now, I gotta warn ya,
-Don't mess around with commands that can harm ya.
+Yo yo, I'm your terminal assistant, here to assist
+To install Apache on Linux Mint, follow this list
+
+First things first, let's update and upgrade
+Ensure your system is ready to engage
+
+```
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+Now it's time to install Apache, let's get it done
+Just type this command in, it's gonna be fun
+
+```
+sudo apt-get install apache2
+```
+
+Press enter, let it do its thing
+Once it's installed, Apache's gonna sing
+
+Check the status to make sure it's running right
+```
+sudo systemctl status apache2
+```
+
+Apache is installed and ready to go
+Now you can serve websites like a pro

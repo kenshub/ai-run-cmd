@@ -1,0 +1,6 @@
+Yo, yo, yo, let me assist with that query,
+Gonna check the startup log, no need to worry.
+Type in "`tail -n 100 /var/log/syslog`",
+And watch as the info begins to unfold.
+But be careful now, I gotta warn ya,
+Don't mess around with commands that can harm ya.

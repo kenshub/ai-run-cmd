@@ -10,7 +10,7 @@
  
 
  # === Load .env if available ===
- if [ -f ./.env ]; then
+ if [ -f ~/ai-run-cmd/.env ]; then
   # Load environment variables while preserving quotes and special characters
   while IFS= read -r line || [ -n "$line" ]; do
   # Skip comments and empty lines
@@ -34,7 +34,7 @@
   # Export the variable
   export "$var_name=$var_value"
   fi
-  done < ./.env
+  done < ~/ai-run-cmd/.env
  fi
  
 
@@ -50,7 +50,7 @@
  
 
  # Load provider functions
- [ -f scripts/ai-providers.sh ] && source scripts/ai-providers.sh
+ [ -f ~/ai-run-cmd/scripts/ai-providers.sh ] && source ~/ai-run-cmd/scripts/ai-providers.sh
  
 
  # === Extract commands from AI response ===
@@ -306,7 +306,7 @@
     screen -X stuff "$selected"
   elif [ -n "$BASH_VERSION" ]; then
     # For Bash, use read -e to allow editing
-    read -e -i "$selected" -p "Run command: " command_to_run
+    read -e -i "$selected" -p "Run cmd: " command_to_run
     history -s "$command_to_run"
     eval "$command_to_run"
   else

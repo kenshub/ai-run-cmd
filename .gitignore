@@ -5,8 +5,39 @@
 *~
 .*.swp
 
-# OS-specific files
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
 .DS_Store
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Build artifacts
+build/
+dist/
+out/
+
+# AI docs
+docs/ai-tasks/
+.cline*
 
 # Sensitive environment files
 .env

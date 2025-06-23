@@ -10,7 +10,7 @@
  
 
  # === Load .env if available ===
- if [ -f ~/ai-run-cmd/.env ]; then
+ if [ -f ./.env ]; then
   # Load environment variables while preserving quotes and special characters
   while IFS= read -r line || [ -n "$line" ]; do
   # Skip comments and empty lines
@@ -34,7 +34,7 @@
   # Export the variable
   export "$var_name=$var_value"
   fi
-  done < ~/ai-run-cmd/.env
+  done < ./.env
  fi
  
 
@@ -44,10 +44,14 @@
  DEFAULT_ACTION=${DEFAULT_ACTION:-ask}
  DEBUG_AI=${DEBUG_AI:-0}
  AI_PROVIDER=${AI_PROVIDER:-openai}
+ AI_CONTEXT_BEHAVIOR=${AI_CONTEXT_BEHAVIOR:-"Act like a terminal assistant."}
+ AI_CONTEXT_ENVIRONMENT=${AI_CONTEXT_ENVIRONMENT:-"I'm using Linux Mint and Bash."}
+ AI_CONTEXT_FORMAT=${AI_CONTEXT_FORMAT:-"Always respond with full terminal commands. No explanations unless I ask."}
+ AI_CONTEXT_WARNING=${AI_CONTEXT_WARNING:-" "}
  
 
  # Load provider functions
- [ -f ~/ai-run-cmd/ai-providers.sh ] && source ~/ai-run-cmd/ai-providers.sh
+ [ -f scripts/ai-providers.sh ] && source scripts/ai-providers.sh
  
 
  # === Extract commands from AI response ===
@@ -159,17 +163,44 @@
     provider "${@:2}"
     return 0
   fi
+
+  # Initialize AI_CONTEXT_ACTION
+  AI_CONTEXT_ACTION=""
+
+  # Easter egg: if the user types "rap", add a bit of fun to the context
+  if [ "$1" = "rap" ]; then
+    # Randomly choose between two rap-style prompts
+    if [ $((RANDOM % 2)) -eq 0 ]; then
+      AI_CONTEXT_ACTION="Respond in a rap style."
+    else
+      AI_CONTEXT_ACTION="Answer in a rhyme."
+    fi
+    # Remove "rap" from the arguments
+    shift
+  fi
+
+  # Explain command
+  if [ "$1" = "explain" ]; then
+    AI_CONTEXT_ACTION="Explain the command and what it does."
+    # Remove "explain" from the arguments
+    shift
+  fi
+
+  # Assemble the final context
+  local context_prefix="${AI_CONTEXT_BEHAVIOR} ${AI_CONTEXT_ACTION} ${AI_CONTEXT_ENVIRONMENT} ${AI_CONTEXT_WARNING} ${AI_CONTEXT_FORMAT} "
+  local context_suffix=" "
+
  
 
   # Debug: Show the raw AI_CONTEXT variable
   if [ "$DEBUG_AI" = "1" ]; then
-  echo "[DEBUG] AI_CONTEXT: '$AI_CONTEXT'"
+  echo "[DEBUG] AI_CONTEXT: '$context_prefix' +command+ '$context_suffix'"
   fi
  
 
   # Format the prompt properly with newlines
   local formatted_prompt
-  printf -v formatted_prompt "%s\n\n%s" "$AI_CONTEXT" "$*"
+  printf -v formatted_prompt "%s\n\n%s" "$context_prefix" "$*" "$context_suffix"
  
 
   local temp_full="/tmp/ai_full.json"
@@ -211,7 +242,7 @@
 
   # Debug: Show the extracted message
   if [ "$DEBUG_AI" = "1" ]; then
-  echo "[DEBUG] Extracted message:"
+  echo "Extracted message:"
   echo "$message"
   fi
   fi
@@ -230,27 +261,27 @@
   # Prepare preview content based on debug setting
   local preview_cmd
   if [ "$DEBUG_AI" = "1" ]; then
-  # Get the current model based on provider
-  local current_model
-  case "$AI_PROVIDER" in
-  openai)    current_model="$OPENAI_MODEL" ;;
-  ollama)    current_model="$OLLAMA_MODEL" ;;
-  anthropic) current_model="Claude" ;;
-  mistral)   current_model="Mistral" ;;
-  groq)      response=$(ai_call_groq "$formatted_prompt") ;;
-  *)         current_model="Unknown" ;;
-  esac
+    # Get the current model based on provider
+    local current_model
+    case "$AI_PROVIDER" in
+    openai)    current_model="$OPENAI_MODEL" ;;
+    ollama)    current_model="$OLLAMA_MODEL" ;;
+    anthropic) current_model="Claude" ;;
+    mistral)   current_model="Mistral" ;;
+    groq)      response=$(ai_call_groq "$formatted_prompt") ;;
+    *)         current_model="Unknown" ;;
+    esac
  
 
-  preview_cmd="echo -e '=== DEBUG INFO ===\nProvider: $AI_PROVIDER\nModel: $current_model\n\n=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response"
+    preview_cmd="echo -e '=== DEBUG INFO ===\nAI RUN CMD v0.5\nProvider: $AI_PROVIDER\nModel: $current_model\n\n=== PROMPT ===\n'; cat $temp_prompt; echo -e '\n\n=== RESPONSE ===\n'; cat $temp_response"
   else
-  preview_cmd="echo -e '=== RESPONSE ===\n'; cat $temp_response"
+    preview_cmd="cat $temp_response"
   fi
  
 
-  local selected=$(fzf --prompt="Pick a command: " \
+  local selected=$( (cat "$temp_commands"; echo "Exit") | fzf --prompt="Pick a command: " \
   --preview="$preview_cmd" \
-  --preview-window=up:wrap < "$temp_commands")
+  --preview-window=up:70%:wrap)
  
 
   if [ -z "$selected" ]; then
@@ -259,28 +290,28 @@
   fi
  
 
-  echo -e "\n➡️ Selected:\n$selected"
- 
+  if [ "$selected" = "Exit" ]; then
+    return 0 # Exit the function without printing anything
+  fi
 
-  case "$DEFAULT_ACTION" in
-  run|RUN)
-  eval "$selected"
-  ;;
-  copy|COPY)
-  echo "$selected" | xclip -selection clipboard
-  echo "📋 Copied to clipboard."
-  ;;
-  ask|ASK|*)
-  echo -e "Choose an action:\n  [r] Run  [c] Copy to clipboard  [x] Exit"
-  read -n1 -rp "> " action
-  echo
-  case "$action" in
-  r|R) eval "$selected" ;;
-  c|C) echo "$selected" | xclip -selection clipboard; echo "📋 Copied." ;;
-  x|X|*) echo "❌ Exiting." ;;
-  esac
-  ;;
-  esac
+  if [ -n "$ZSH_VERSION" ]; then
+    # For Zsh, print -z pushes the command to the editing buffer
+    print -z "$selected"
+  elif [ -n "$TMUX" ]; then
+    # If in tmux, send the keys to the pane
+    tmux send-keys -l -- "$selected"
+  elif [ -n "$STY" ]; then
+    # If in GNU Screen, stuff the command into the input buffer
+    screen -X stuff "$selected"
+  elif [ -n "$BASH_VERSION" ]; then
+    # For Bash, use read -e to allow editing
+    read -e -i "$selected" -p "Run command: " command_to_run
+    history -s "$command_to_run"
+    eval "$command_to_run"
+  else
+    # Fallback for other shells
+    echo "$selected"
+  fi
  }
  
 

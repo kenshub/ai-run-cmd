@@ -117,8 +117,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
       echo "Homebrew not found. Please install Homebrew first, then install the following packages manually: ${missing[*]}"
     fi
 else
-    echo "Homebrew not found. Please install Homebrew first, then install the following packages manually: ${missing[*]}"
-  elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
     echo "On Windows, please install 'jq' manually."
     echo "Download it from https://jqlang.org/download/"
     echo "Then, add the executable to your system's PATH."

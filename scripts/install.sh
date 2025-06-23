@@ -126,22 +126,18 @@ else
     echo "Unsupported OS: $OSTYPE. Please install the following packages manually: ${missing[*]}"
   fi
 fi
-
-  # Verify installation
-  post_install_missing=()
-  for cmd in "${missing[@]}"; do
-    if ! command -v $cmd &> /dev/null; then
-      post_install_missing+=($cmd)
-    fi
-  done
-
-  if [ ${#post_install_missing[@]} -ne 0 ]; then
-    echo "Failed to install: ${post_install_missing[*]}. Please install them manually."
-  else
-    echo "✅ All dependencies are now installed."
+# Verify installation
+post_install_missing=()
+for cmd in "${missing[@]}"; do
+  if ! command -v $cmd &> /dev/null; then
+    post_install_missing+=($cmd)
   fi
+done
+
+if [ ${#post_install_missing[@]} -ne 0 ]; then
+  echo "Failed to install: ${post_install_missing[*]}. Please install them manually."
 else
-  echo "✅ All dependencies found."
+  echo "✅ All dependencies are now installed."
 fi
 
 # Only ask for preferences if we created a new .env file

@@ -19,7 +19,7 @@ See [features.md](features.md) for a complete list of features and capabilities.
 ### ✅ Quick One-Liner
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/kenshub/ai-run-cmd/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/kenshub/ai-run-cmd/main/scripts/install.sh)
 ```
 
 > This clones the repo, sets up `.env`, and updates your `.bashrc` or `.zshrc`.
@@ -35,14 +35,15 @@ See [install.md](install.md) for manual setup instructions.
 ```bash
 ai restart apache
 ai run docker prune
-ai list containers
+ai list files by size
 ```
 
-- `[r]` Run it
-- `[c]` Copy it
-- `[x]` Exit
+There are currently 2 custom flags, `explain` and `rap`.
+```
+ai explain tar -czpf
+ai rap hard disc space remaining
+```
 
----
 
 ## ☕ Buy Me a Coffee
 

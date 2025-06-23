@@ -41,7 +41,6 @@
  # Set defaults if not provided
  OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
  OLLAMA_MODEL=${OLLAMA_MODEL:-mistral}
- DEFAULT_ACTION=${DEFAULT_ACTION:-ask}
  DEBUG_AI=${DEBUG_AI:-0}
  AI_PROVIDER=${AI_PROVIDER:-openai}
  AI_CONTEXT_BEHAVIOR=${AI_CONTEXT_BEHAVIOR:-"Act like a terminal assistant."}

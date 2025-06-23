@@ -26,7 +26,6 @@ The following environment variables can be used to configure AI Run CMD:
 -   `MISTRAL_MODEL`: The Mistral model to use. Defaults to `mistral-tiny`.
 -   `GROQ_API_KEY`: Your Groq API key. Required when using the Groq provider.
 -   `GROQ_MODEL`: The Groq model to use. Defaults to `llama3-70b`.
--   `DEFAULT_ACTION`: The default action to take when a command is selected. Can be `run`, `copy`, or `ask`. Defaults to `ask`.
 -   `DEBUG_AI`: Enable debug mode. Set to `1` to enable.
 
 ### 📚 Supported Models

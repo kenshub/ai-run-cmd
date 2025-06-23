@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "📦 Installing AI RUN CMD..."
+echo "📦 Installing AI RUN CMD v0.6..."
 
 # Check if folder exists
 if [ -d ~/ai-run-cmd ]; then
@@ -34,19 +34,12 @@ else
   echo "🔧 Collecting configuration..."
   read -p "What is your operating system? (e.g. Linux Mint): " user_os
   read -p "What shell do you use? (e.g. bash): " user_shell
-  read -p "Optional AI prompt context (press enter for default): " user_context
-
-  echo "AI_OS=\"$user_os\"" >> .env
-  echo "AI_SHELL=\"$user_shell\"" >> .env
+  echo "AI_OS=\"$user_os\"" >> ~/ai-run-cmd/.env
+  echo "AI_SHELL=\"$user_shell\"" >> ~/ai-run-cmd/.env
   user_context="Act like a terminal assistant. I'm using $user_os and $user_shell. Always respond with full terminal commands I can run inside ticks or quotes. No explanations unless I ask. If it's unsafe, give a warning."
-  echo "AI_CONTEXT=\"$user_context\"" >> .env
-
-
-
+  echo "AI_CONTEXT_ENVIRONMENT=\"$user_context\"" >> ~/ai-run-cmd/.env
   echo "✅ .env created. Edit it to set your API key and model."
 fi
-
-
 
 # Detect shell rc
 if [ -n "$ZSH_VERSION" ]; then

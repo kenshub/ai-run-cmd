@@ -9,19 +9,11 @@ if [ -d ~/ai-run-cmd ]; then
 
   if [ -d ~/ai-run-cmd/.git ]; then
     echo "🔄 Updating existing repo via git..."
-    echo "🔄 Updating existing repo via git..."
     git -C ~/ai-run-cmd pull
   else
     echo "OK, not a git repo, so we will not be able to auto-update."
   fi
 else
-  if command -v git &> /dev/null; then
-    echo "Cloning repo via git..."
-    git clone https://github.com/kenshub/ai-run-cmd.git ~/ai-run-cmd
-  else
-    echo "git not found. Please install git or download the zip and run this script again."
-    exit 1
-  fi
   if command -v git &> /dev/null; then
     echo "Cloning repo via git..."
     git clone https://github.com/kenshub/ai-run-cmd.git ~/ai-run-cmd
@@ -73,7 +65,6 @@ fi
 # Dependency check
 echo "🔍 Checking dependencies..."
 
-
 # Function to install packages
 install_packages() {
   local package_manager=$1
@@ -116,12 +107,17 @@ if [ ${#missing[@]} -ne 0 ]; then
     else
       echo "Could not detect package manager on Linux. Please install the following packages manually: ${missing[*]}"
     fi
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
+  else
+    echo "Could not detect package manager on Linux. Please install the following packages manually: ${missing[*]}"
+  fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
     if command -v brew &>/dev/null; then
       install_packages brew "${missing[@]}"
     else
       echo "Homebrew not found. Please install Homebrew first, then install the following packages manually: ${missing[*]}"
     fi
+else
+    echo "Homebrew not found. Please install Homebrew first, then install the following packages manually: ${missing[*]}"
   elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
     echo "On Windows, please install 'jq' manually."
     echo "Download it from https://jqlang.org/download/"
@@ -130,6 +126,7 @@ if [ ${#missing[@]} -ne 0 ]; then
   else
     echo "Unsupported OS: $OSTYPE. Please install the following packages manually: ${missing[*]}"
   fi
+fi
 
   # Verify installation
   post_install_missing=()
@@ -143,7 +140,7 @@ if [ ${#missing[@]} -ne 0 ]; then
     echo "Failed to install: ${post_install_missing[*]}. Please install them manually."
   else
     echo "✅ All dependencies are now installed."
-
+  fi
 else
   echo "✅ All dependencies found."
 fi

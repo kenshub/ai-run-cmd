@@ -41,6 +41,7 @@
  # Set defaults if not provided
  OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
  OLLAMA_MODEL=${OLLAMA_MODEL:-mistral}
+ GOOGLE_MODEL=${GOOGLE_MODEL:-gemini-pro}
  DEBUG_AI=${DEBUG_AI:-0}
  AI_PROVIDER=${AI_PROVIDER:-openai}
  AI_CONTEXT_BEHAVIOR=${AI_CONTEXT_BEHAVIOR:-"Act like a terminal assistant."}
@@ -221,6 +222,7 @@
   anthropic) response=$(ai_call_anthropic "$formatted_prompt") ;;
   mistral)   response=$(ai_call_mistral "$formatted_prompt") ;;
   groq)      response=$(ai_call_groq "$formatted_prompt") ;;
+  google)    response=$(ai_call_google "$formatted_prompt") ;;
   *)
   echo "❌ Unknown AI_PROVIDER: $AI_PROVIDER"
   return 1
@@ -234,6 +236,8 @@
   # Extract message depending on provider format
   if [[ "$AI_PROVIDER" == "ollama" ]]; then
   message="$response"
+  elif [[ "$AI_PROVIDER" == "google" ]]; then
+  message=$(echo "$response" | jq -r '.candidates[0].content.parts[0].text')
   else
   # Try different JSON paths to extract the message content
   message=$(echo "$response" | jq -r '.choices[0].message.content // .content // .choices[0].text // .message // empty')
@@ -267,7 +271,8 @@
     ollama)    current_model="$OLLAMA_MODEL" ;;
     anthropic) current_model="Claude" ;;
     mistral)   current_model="Mistral" ;;
-    groq)      response=$(ai_call_groq "$formatted_prompt") ;;
+    groq)      current_model="$GROQ_MODEL" ;;
+    google)    current_model="$GOOGLE_MODEL" ;;
     *)         current_model="Unknown" ;;
     esac
  

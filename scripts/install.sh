@@ -136,7 +136,7 @@ fi
 # Only ask for preferences if we created a new .env file
 if [ $ENV_EXISTS -eq 0 ]; then
   # Ask you for your preferred AI provider
-  echo "Available AI providers: openai, ollama, anthropic, mistral, groq"
+  echo "Available AI providers: openai, ollama, anthropic, mistral, groq, google"
   read -r -p "Please enter your preferred AI provider (default: openai): " preferred_provider
   preferred_provider="${preferred_provider:-openai}"
 
@@ -169,6 +169,11 @@ if [ $ENV_EXISTS -eq 0 ]; then
       read -r -p "Please enter your preferred Groq model (default: llama3-70b): " preferred_model
       preferred_model="${preferred_model:-llama3-70b}"
       sed -i "s/^GROQ_MODEL=.*/GROQ_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
+      ;;
+    google)
+      read -r -p "Please enter your preferred Google model (default: gemini-pro): " preferred_model
+      preferred_model="${preferred_model:-gemini-pro}"
+      sed -i "s/^GOOGLE_MODEL=.*/GOOGLE_MODEL=${preferred_model}/" ~/ai-run-cmd/.env
       ;;
   esac
 fi

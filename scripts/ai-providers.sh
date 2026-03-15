@@ -71,11 +71,28 @@ function ai_call_groq() {
     }'
 }
 
+# === Google ===
+function ai_call_google() {
+    local prompt="$1"
+    # Escape the prompt for JSON
+    local escaped_prompt=$(echo "$prompt" | jq -Rs .)
+
+    curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$GOOGLE_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "contents": [{
+            "parts": [{
+                "text": '"$escaped_prompt"'
+            }]
+        }]
+    }'
+}
+
 # Function to set the AI provider
 set_provider() {
   local provider="$1"
   case "$provider" in
-    openai|ollama|anthropic|mistral|groq)
+    openai|ollama|anthropic|mistral|groq|google)
       export AI_PROVIDER="$provider"
       echo "✅ AI_PROVIDER set to $provider"
       ;;
@@ -95,6 +112,7 @@ list_providers() {
   echo "  - anthropic"
   echo "  - mistral"
   echo "  - groq"
+  echo "  - google"
 }
 
 # Function to handle the provider command

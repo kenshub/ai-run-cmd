@@ -52,6 +52,7 @@
 
  # Load provider functions
  [ -f ~/ai-run-cmd/scripts/ai-providers.sh ] && source ~/ai-run-cmd/scripts/ai-providers.sh
+ [ -f ~/ai-run-cmd/scripts/install-local.sh ] && source ~/ai-run-cmd/scripts/install-local.sh
  
 
  # === Extract commands from AI response ===
@@ -161,6 +162,12 @@
   # Check if the command is to set the provider
   if [ "$1" = "provider" ]; then
     provider "${@:2}"
+    return 0
+  fi
+
+  # Install a local LLM via Ollama
+  if [ "$1" = "install-local" ]; then
+    install_local_llm
     return 0
   fi
 
